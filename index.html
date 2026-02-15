@@ -1,0 +1,561 @@
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Локальный финансовый калькулятор (12 мес)F</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121a33; --muted:#8ea0c7; --text:#e9eeff; --good:#35d07f; --bad:#ff5a6b; --line:#22305a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b1020 0%, #070b16 100%);color:var(--text)}
+    header{padding:18px 18px 10px;border-bottom:1px solid var(--line)}
+    header h1{margin:0 0 6px;font-size:18px}
+    header p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+    .wrap{max-width:1220px;margin:0 auto;padding:14px 18px 28px}
+    .grid{display:grid;grid-template-columns:440px 1fr;gap:14px;align-items:start}
+    @media (max-width:1000px){.grid{grid-template-columns:1fr}}
+    .panel{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 10px 26px rgba(0,0,0,0.35)}
+    .panel h2{margin:0 0 10px;font-size:14px;color:#cfe0ff}
+    .sub{margin:10px 0 8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.09);color:#cfe0ff;font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .sub small{color:var(--muted);font-weight:600}
+    .form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    label{font-size:12px;color:var(--muted)}
+    input{width:100%;padding:9px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.2);color:var(--text);outline:none}
+    input:focus{border-color:rgba(106,167,255,0.6); box-shadow:0 0 0 3px rgba(106,167,255,0.15)}
+    .hint{margin-top:10px;padding:10px;border-radius:12px;background:rgba(106,167,255,0.08);border:1px solid rgba(106,167,255,0.18);color:#d7e6ff;font-size:12px;line-height:1.4}
+    .warn{margin-top:10px;padding:10px;border-radius:12px;background:rgba(255,90,107,0.10);border:1px solid rgba(255,90,107,0.22);color:#ffd7dd;font-size:12px;line-height:1.4;display:none}
+    .warn.show{display:block}
+    .results{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:1000px){.results{grid-template-columns:1fr}}
+    .section{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,0.35)}
+    .section .head{padding:10px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .section .head strong{font-size:13px}
+    .section .head span{font-size:12px;color:var(--muted)}
+    table{width:100%; border-collapse:collapse;}
+    td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;vertical-align:top}
+    td:nth-child(1){color:#cfe0ff}
+    td:nth-child(2){text-align:right;font-variant-numeric:tabular-nums}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);color:var(--muted);font-size:11px;white-space:nowrap}
+    .pos{color:var(--good)} .neg{color:var(--bad)}
+    .footnote{margin-top:10px;color:var(--muted);font-size:11px;line-height:1.4}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .row2{display:grid;grid-template-columns: 1fr 1fr;gap:10px}
+    @media (max-width:520px){.row2{grid-template-columns:1fr}}
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Финансовый калькулятор</h1>
+  <p>
+    <span class="mono"><b></b></span>
+    <span class="mono"></span>
+    <span class="mono"></span>
+    <br>
+  </p>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+
+    <!-- INPUTS -->
+    <section class="panel">
+      <h2>Параметры</h2>
+
+      <div class="sub">Период модели <small>12 месяцев от даты старта</small></div>
+      <div class="form">
+        <div class="field">
+          <label for="startDate">Дата старта проекта</label>
+          <input id="startDate" type="date" value="2027-01-01">
+        </div>
+        <div class="field">
+          
+        </div>
+      </div>
+
+      <div class="sub">Оборотный капитал (дни)</div>
+      <div class="form">
+        <div class="field"><label for="dio">DIO (Оборачиваемость запасов), дней</label><input id="dio" type="number" min="0" step="1" value="100"></div>
+        <div class="field"><label for="dso">DSO (Оборачиваемость ДЗ), дней</label><input id="dso" type="number" min="0" step="1" value="21"></div>
+        <div class="field"><label for="dpo">DPO (Оборачиваемость КЗ), дней</label><input id="dpo" type="number" min="0" step="1" value="60"></div>
+        <div class="field">
+          
+        </div>
+      </div>
+
+      <div class="sub">Стартовые остатки оборотных активов <small>на начало модели</small></div>
+      <div class="form">
+        <div class="field"><label for="arStart">ДЗ начало, ₽</label><input id="arStart" type="number" min="0" step="1" value="50000000"></div>
+        <div class="field"><label for="invStart">Запасы начало, ₽</label><input id="invStart" type="number" min="0" step="1" value="100000000"></div>
+        <div class="field"><label for="apStart">КЗ начало, ₽</label><input id="apStart" type="number" min="0" step="1" value="50000000"></div>
+        <div class="field">
+          
+        </div>
+      </div>
+
+      <div class="sub">Налоги и финансирование</div>
+      <div class="form">
+        <div class="field"><label for="taxRate">Налоги, % от бух. выручки</label><input id="taxRate" type="number" min="0" step="0.01" value="6"></div>
+        <div class="field"><label for="interestMonthly">Проценты, ₽/мес</label><input id="interestMonthly" type="number" min="0" step="1" value="800000"></div>
+        <div class="field"><label for="debtPrincipalAnnual">Погашение тела долга + выведенные дивиденды за год, ₽</label><input id="debtPrincipalAnnual" type="number" min="0" step="1" value="40000000"></div>
+        <div class="field">
+          
+        </div>
+      </div>
+
+      <div class="sub">АУП (Административные, ФОТ, сервисы, банк, бухгалтерия)</div>
+      <div class="form">
+        <div class="field"><label for="opexFixedMonthly">OPEX фикс, ₽/мес</label><input id="opexFixedMonthly" type="number" min="0" step="1" value="5650000"></div>
+        <div class="field"><label for="transportPct">Транспорт, % от выручки</label><input id="transportPct" type="number" min="0" step="0.01" value="0.30"></div>
+        <div class="field"><label for="extMktPct">Внешний маркетинг, % от выручки</label><input id="extMktPct" type="number" min="0" step="0.01" value="1"></div>
+        <div class="field"><label class="badge">База %</label><div class="footnote">% OPEX считаются от <b>финансовой</b> выручки.</div></div>
+      </div>
+
+      
+
+      <div id="seasonWarn" class="warn"></div>
+
+      <!-- Directions -->
+      <div class="sub">Тапочки <small>параметры</small></div>
+      <div class="form">
+        <div class="field"><label for="qtyS">Шт/год</label><input id="qtyS" type="number" min="0" step="1" value="1000000"></div>
+        <div class="field"><label for="priceS">Чек, ₽</label><input id="priceS" type="number" min="0" step="1" value="1600"></div>
+        <div class="field"><label for="cogsS">Себест., ₽/шт</label><input id="cogsS" type="number" min="0" step="1" value="380"></div>
+        <div class="field"><label for="sppS">СПП (скидка), %</label><input id="sppS" type="number" min="0" step="0.01" value="25"></div>
+        <div class="field"><label for="commS">Комиссия, %</label><input id="commS" type="number" min="0" step="0.01" value="41"></div>
+        <div class="field"><label for="logS">Логистика, %</label><input id="logS" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="iadS">Внутр. реклама, %</label><input id="iadS" type="number" min="0" step="0.01" value="7"></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="panel" style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.15);">
+          <div class="sub" style="margin:0 0 8px;">Сезонность Тапочки <small>Q1..Q4 (%)</small></div>
+          <div class="form">
+            <div class="field"><label for="sQ1S">Q1</label><input id="sQ1S" type="number" min="0" step="0.01" value="20"></div>
+            <div class="field"><label for="sQ2S">Q2</label><input id="sQ2S" type="number" min="0" step="0.01" value="20"></div>
+            <div class="field"><label for="sQ3S">Q3</label><input id="sQ3S" type="number" min="0" step="0.01" value="20"></div>
+            <div class="field"><label for="sQ4S">Q4</label><input id="sQ4S" type="number" min="0" step="0.01" value="40"></div>
+          </div>
+        </div>
+        <div class="footnote" style="align-self:center;">Сумма Q1..Q4 должна быть 100 (иначе нормализуем пропорционально).</div>
+      </div>
+
+      <div class="sub" style="margin-top:14px;">Одежда</div>
+      <div class="form">
+        <div class="field"><label for="qtyC">Шт/год</label><input id="qtyC" type="number" min="0" step="1" value="100000"></div>
+        <div class="field"><label for="priceC">Чек, ₽</label><input id="priceC" type="number" min="0" step="1" value="3500"></div>
+        <div class="field"><label for="cogsC">Себест., ₽/шт</label><input id="cogsC" type="number" min="0" step="1" value="750"></div>
+        <div class="field"><label for="sppC">СПП (скидка), %</label><input id="sppC" type="number" min="0" step="0.01" value="25"></div>
+        <div class="field"><label for="commC">Комиссия, %</label><input id="commC" type="number" min="0" step="0.01" value="40"></div>
+        <div class="field"><label for="logC">Логистика, %</label><input id="logC" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="iadC">Внутр. реклама, %</label><input id="iadC" type="number" min="0" step="0.01" value="7"></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="panel" style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.15);">
+          <div class="sub" style="margin:0 0 8px;">Сезонность Одежда <small>Q1..Q4 (%)</small></div>
+          <div class="form">
+            <div class="field"><label for="sQ1C">Q1</label><input id="sQ1C" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ2C">Q2</label><input id="sQ2C" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ3C">Q3</label><input id="sQ3C" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ4C">Q4</label><input id="sQ4C" type="number" min="0" step="0.01" value="25"></div>
+          </div>
+        </div>
+        <div class="footnote" style="align-self:center;">По умолчанию равномерно.</div>
+      </div>
+
+      <div class="sub" style="margin-top:14px;">Обувь</div>
+      <div class="form">
+        <div class="field"><label for="qtyB">Шт/год</label><input id="qtyB" type="number" min="0" step="1" value="50000"></div>
+        <div class="field"><label for="priceB">Чек, ₽</label><input id="priceB" type="number" min="0" step="1" value="3000"></div>
+        <div class="field"><label for="cogsB">Себест., ₽/шт</label><input id="cogsB" type="number" min="0" step="1" value="1000"></div>
+        <div class="field"><label for="sppB">СПП (скидка), %</label><input id="sppB" type="number" min="0" step="0.01" value="25"></div>
+        <div class="field"><label for="commB">Комиссия, %</label><input id="commB" type="number" min="0" step="0.01" value="40"></div>
+        <div class="field"><label for="logB">Логистика, %</label><input id="logB" type="number" min="0" step="0.01" value="0"></div>
+        <div class="field"><label for="iadB">Внутр. реклама, %</label><input id="iadB" type="number" min="0" step="0.01" value="7"></div>
+      </div>
+      <div class="row2" style="margin-top:10px;">
+        <div class="panel" style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.15);">
+          <div class="sub" style="margin:0 0 8px;">Сезонность Обувь <small>Q1..Q4 (%)</small></div>
+          <div class="form">
+            <div class="field"><label for="sQ1B">Q1</label><input id="sQ1B" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ2B">Q2</label><input id="sQ2B" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ3B">Q3</label><input id="sQ3B" type="number" min="0" step="0.01" value="25"></div>
+            <div class="field"><label for="sQ4B">Q4</label><input id="sQ4B" type="number" min="0" step="0.01" value="25"></div>
+          </div>
+        </div>
+        <div class="footnote" style="align-self:center;"></div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results">
+      <div class="section">
+        <div class="head"><strong>Выручка (12 месяцев)</strong><span class="badge">финансовая</span></div>
+        <table><tbody>
+          <tr><td>Выручка Тапочки</td><td id="revS">—</td></tr>
+          <tr><td>Выручка Одежда</td><td id="revC">—</td></tr>
+          <tr><td>Выручка Обувь</td><td id="revB">—</td></tr>
+          <tr><td><strong>Общая выручка</strong></td><td id="revT"><strong>—</strong></td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="section">
+        <div class="head"><strong>Прибыль (12 месяцев)</strong><span class="badge">Gross → Net</span></div>
+        <table><tbody>
+          <tr><td>Валовая прибыль Тапочки</td><td id="gpS">—</td></tr>
+          <tr><td>Рентабельность валовой прибыли Тапочки</td><td id="gpmS">—</td></tr>
+          <tr><td>Валовая прибыль Одежда</td><td id="gpC">—</td></tr>
+          <tr><td>Рентабельность валовой прибыли Одежда</td><td id="gpmC">—</td></tr>
+          <tr><td>Валовая прибыль Обувь</td><td id="gpB">—</td></tr>
+          <tr><td>Рентабельность валовой прибыли Обувь</td><td id="gpmB">—</td></tr>
+          <tr><td><strong>Общая валовая прибыль</strong></td><td id="gpT"><strong>—</strong></td></tr>
+          <tr><td>Чистая прибыль (P&L)</td><td id="np">—</td></tr>
+          <tr><td>Рентабельность чистой прибыли</td><td id="npm">—</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="section">
+        <div class="head"><strong>ДДС:</strong><span class="badge">Операционный пото+финансовый поток</span></div>
+        <table><tbody>
+          <tr><td>Операционный поток (разница между поступлениями и списаниями)</td><td id="cfoY">—</td></tr>
+          <tr><td>Финансовый поток (разница между поступлениями и списаниями)</td><td id="cffY">—</td></tr>
+          <tr><td><strong>Денег на конец года</strong></td><td id="cashEnd"><strong>—</strong></td></tr>
+          <tr><td>Контроль: Cash = Cash_start + Σ(CFO)+Σ(CFF)</td><td id="cashCheck">—</td></tr>
+        </tbody></table>
+        <div class="footnote" style="padding:10px 12px">
+          
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="head"><strong>Оборотный капитал</strong><span class="badge">конец года</span></div>
+        <table><tbody>
+          <tr><td>ДЗ на конец года</td><td id="arEnd">—</td></tr>
+          <tr><td>Запасы на конец года</td><td id="invEnd">—</td></tr>
+          <tr><td>КЗ на конец года</td><td id="apEnd">—</td></tr>
+          <tr><td><strong>Чистый оборотный капитал (ДЗ+Запасы-КЗ) на конец года</strong></td><td id="nwcEnd"><strong>—</strong></td></tr>
+          <tr><td>Активы на конец года</td><td id="assetsEnd">—</td></tr>
+          <tr><td>Средние активы</td><td id="assetsAvg">—</td></tr>
+          <tr><td>Оборачиваемость активов</td><td id="at">—</td></tr>
+          <tr><td>Период оборачиваемости</td><td id="atDays">—</td></tr>
+          <tr><td>Доля “замороженных” денег (NWC / Активы)</td><td id="frozen">—</td></tr>
+          <tr><td>Финансовый цикл (Оборачиваемость ДЗ+Оборачиваемость запасов-Оборачиваемость КЗ)</td><td id="ccc">—</td></tr>
+          <tr><td>Операционный цикл (Оборачиваемость ДЗ+Оборачиваемость запасов)</td><td id="opCycle">—</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  // Helpers
+  const fmtRub = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 });
+  const fmtPct = new Intl.NumberFormat("ru-RU", { style:"percent", maximumFractionDigits: 1 });
+
+  function n(id){ return Number(document.getElementById(id).value || 0); }
+  function pct(x){ return x / 100; }
+
+  function setText(id, value, type="rub"){
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(type==="rub"){
+      el.textContent = fmtRub.format(Math.round(value));
+      el.classList.toggle("pos", value > 0);
+      el.classList.toggle("neg", value < 0);
+    } else if(type==="pct"){
+      const v = (isFinite(value) ? value : 0);
+      el.textContent = fmtPct.format(v);
+      el.classList.remove("pos","neg");
+    } else if(type==="num"){
+      el.textContent = isFinite(value) ? String(Number(value.toFixed(3))) : "—";
+      el.classList.remove("pos","neg");
+    } else if(type==="days"){
+      el.textContent = isFinite(value) ? `${Math.round(value)} дн.` : "—";
+      el.classList.remove("pos","neg");
+    }
+  }
+
+  function parseStartDate(){
+    const raw = document.getElementById("startDate").value;
+    const d = raw ? new Date(raw + "T00:00:00") : new Date("2027-01-01T00:00:00");
+    return isNaN(d.getTime()) ? new Date("2027-01-01T00:00:00") : d;
+  }
+
+  function buildMonths(startDate){
+    const months = [];
+    const d0 = new Date(startDate.getTime());
+    d0.setDate(1);
+    for(let i=0;i<12;i++){
+      const d = new Date(d0.getTime());
+      d.setMonth(d0.getMonth()+i);
+      months.push(d);
+    }
+    return months;
+  }
+
+  function quarterOf(date){
+    const m = date.getMonth();
+    return Math.floor(m/3)+1; // 1..4
+  }
+
+  function normalizeSeason(q1,q2,q3,q4){
+    const sum = q1+q2+q3+q4;
+    if(sum <= 0) return {q:[0.25,0.25,0.25,0.25], sum:0, normalized:true};
+    const norm = [q1,q2,q3,q4].map(v => v/sum);
+    return {q:norm, sum, normalized: Math.abs(sum-100) > 0.0001};
+  }
+
+  // Direction calc (explicit bases)
+  function calcDirectionMonthly(dir, months){
+    const finRevYear = dir.qtyYear * dir.price;    // Финансовая выручка (год)
+    const cogsYear   = dir.qtyYear * dir.unitCogs;
+
+    const out = {
+      finRev: Array(12).fill(0),
+      cogs: Array(12).fill(0),
+      netRec: Array(12).fill(0), // NetReceiptsEarned
+      accRev: Array(12).fill(0), // AccountingRevenue (для налогов)
+      gp: Array(12).fill(0),
+      totals: { finRev:0, gp:0 }
+    };
+
+    for(let i=0;i<12;i++){
+      const q = quarterOf(months[i]);
+      const monthShare = (dir.season.q[q-1]) / 3;
+
+      const finRev = finRevYear * monthShare;
+      const cogs   = cogsYear * monthShare;
+
+      const commission = finRev * dir.commPct;
+      const logistics  = finRev * dir.logPct;
+      const internalAd = finRev * dir.iadPct;
+      const mpFees = commission + logistics + internalAd;
+
+      const netRec = finRev - mpFees;          // от фин. выручки
+      const accRev = finRev * (1 - dir.sppPct);// бух. выручка (минус СПП/скидка)
+
+      const gp = finRev - cogs - mpFees;
+
+      out.finRev[i]=finRev;
+      out.cogs[i]=cogs;
+      out.netRec[i]=netRec;
+      out.accRev[i]=accRev;
+      out.gp[i]=gp;
+
+      out.totals.finRev += finRev;
+      out.totals.gp += gp;
+    }
+    return out;
+  }
+
+  function recalc(){
+    const months = buildMonths(parseStartDate());
+
+    const dio = n("dio"), dso = n("dso"), dpo = n("dpo");
+
+    const arStart  = n("arStart");
+    const invStart = n("invStart");
+    const apStart  = n("apStart");
+
+    const taxRate = pct(n("taxRate"));
+    const interestMonthly = n("interestMonthly");
+
+    const debtPrincipalAnnual  = n("debtPrincipalAnnual");
+
+    const opexFixedMonthly = n("opexFixedMonthly");
+    const transportPct = pct(n("transportPct"));
+    const extMktPct    = pct(n("extMktPct"));
+
+    // Seasonality normalization + warnings
+    const warnLines = [];
+    const sS = normalizeSeason(n("sQ1S"), n("sQ2S"), n("sQ3S"), n("sQ4S"));
+    if(sS.normalized) warnLines.push(`Тапочки: сумма сезонности = ${sS.sum.toFixed(2)} (нормализую).`);
+    const sC = normalizeSeason(n("sQ1C"), n("sQ2C"), n("sQ3C"), n("sQ4C"));
+    if(sC.normalized) warnLines.push(`Одежда: сумма сезонности = ${sC.sum.toFixed(2)} (нормализую).`);
+    const sB = normalizeSeason(n("sQ1B"), n("sQ2B"), n("sQ3B"), n("sQ4B"));
+    if(sB.normalized) warnLines.push(`Обувь: сумма сезонности = ${sB.sum.toFixed(2)} (нормализую).`);
+
+    const warnEl = document.getElementById("seasonWarn");
+    if(warnLines.length){
+      warnEl.textContent = "⚠ " + warnLines.join(" ");
+      warnEl.classList.add("show");
+    } else {
+      warnEl.textContent = "";
+      warnEl.classList.remove("show");
+    }
+
+    // Directions
+    const S = calcDirectionMonthly({
+      qtyYear: n("qtyS"), price: n("priceS"), unitCogs: n("cogsS"),
+      sppPct: pct(n("sppS")), commPct: pct(n("commS")), logPct: pct(n("logS")), iadPct: pct(n("iadS")),
+      season: sS
+    }, months);
+
+    const C = calcDirectionMonthly({
+      qtyYear: n("qtyC"), price: n("priceC"), unitCogs: n("cogsC"),
+      sppPct: pct(n("sppC")), commPct: pct(n("commC")), logPct: pct(n("logC")), iadPct: pct(n("iadC")),
+      season: sC
+    }, months);
+
+    const B = calcDirectionMonthly({
+      qtyYear: n("qtyB"), price: n("priceB"), unitCogs: n("cogsB"),
+      sppPct: pct(n("sppB")), commPct: pct(n("commB")), logPct: pct(n("logB")), iadPct: pct(n("iadB")),
+      season: sB
+    }, months);
+
+    // Totals revenue and GP
+    const revS = S.totals.finRev, revC = C.totals.finRev, revB = B.totals.finRev;
+    const revT = revS + revC + revB;
+
+    const gpS = S.totals.gp, gpC = C.totals.gp, gpB = B.totals.gp;
+    const gpT = gpS + gpC + gpB;
+
+    const gpmS = revS > 0 ? gpS / revS : 0;
+    const gpmC = revC > 0 ? gpC / revC : 0;
+    const gpmB = revB > 0 ? gpB / revB : 0;
+
+    // Company monthly series
+    const finRevM = Array(12).fill(0);
+    const netRecM = Array(12).fill(0);
+    const cogsM   = Array(12).fill(0);
+    const accRevM = Array(12).fill(0);
+
+    for(let i=0;i<12;i++){
+      finRevM[i] = S.finRev[i] + C.finRev[i] + B.finRev[i];
+      netRecM[i] = S.netRec[i] + C.netRec[i] + B.netRec[i];
+      cogsM[i]   = S.cogs[i]   + C.cogs[i]   + B.cogs[i];
+      accRevM[i] = S.accRev[i] + C.accRev[i] + B.accRev[i];
+    }
+
+    // ===== ODDS building blocks (to compute CFO_month) =====
+    const arEnd = Array(12).fill(0), invEnd = Array(12).fill(0), apEnd = Array(12).fill(0);
+    const receiptsCash = Array(12).fill(0), purchases = Array(12).fill(0), paySuppliers = Array(12).fill(0);
+    const opex = Array(12).fill(0), taxes = Array(12).fill(0), interest = Array(12).fill(0);
+
+    const cfo = Array(12).fill(0);  // "Чистый ДП от операционной деятельности" по месяцам
+
+    for(let i=0;i<12;i++){
+      const arBegin  = (i===0 ? arStart  : arEnd[i-1]);
+      const invBegin = (i===0 ? invStart : invEnd[i-1]);
+      const apBegin  = (i===0 ? apStart  : apEnd[i-1]);
+
+      // Receipts via AR (DSO)
+      arEnd[i] = netRecM[i] * (dso/30);
+      const dAR = arEnd[i] - arBegin;
+      receiptsCash[i] = netRecM[i] - dAR;
+
+      // Purchases via Inventory (DIO)
+      invEnd[i] = cogsM[i] * (dio/30);
+      const dInv = invEnd[i] - invBegin;
+      purchases[i] = cogsM[i] + dInv;
+
+      // Supplier payments via AP (DPO)
+      apEnd[i] = purchases[i] * (dpo/30);
+      const dAP = apEnd[i] - apBegin;
+      paySuppliers[i] = purchases[i] - dAP;
+
+      // OPEX from financial revenue (cash = accrual simplification)
+      opex[i] = opexFixedMonthly + finRevM[i] * (transportPct + extMktPct);
+
+      // Taxes from accounting revenue (after SPP discount)
+      taxes[i] = accRevM[i] * taxRate;
+
+      // Interest fixed monthly
+      interest[i] = interestMonthly;
+
+      // CFO_month (эталон для операционной деятельности)
+      cfo[i] = receiptsCash[i] - paySuppliers[i] - opex[i] - interest[i] - taxes[i];
+    }
+
+    // ===== Financial activity (CFF) =====
+    // По умолчанию: привлечения нет, только погашение тела.
+    const cff = Array(12).fill(0);
+    const principalMonthly = debtPrincipalAnnual / 12;
+    for(let i=0;i<12;i++){
+      cff[i] = -principalMonthly; // "Чистый ДП от финансовой деятельности"
+    }
+
+    // ===== ETHALON CASH =====
+    // Cash_end = Cash_start + cumulative sum of CFO + CFF
+    const cashStart = 0;
+    const cashEndM = Array(12).fill(0);
+    for(let i=0;i<12;i++){
+      const prev = (i===0 ? cashStart : cashEndM[i-1]);
+      cashEndM[i] = prev + cfo[i] + cff[i];
+    }
+    const cashEndY = cashEndM[11];
+
+    // Annual sums CFO/CFF
+    const cfoY = cfo.reduce((a,b)=>a+b,0);
+    const cffY = cff.reduce((a,b)=>a+b,0);
+
+    // P&L net profit (principal excluded)
+    const opexAnnual = opex.reduce((a,b)=>a+b,0);
+    const taxesAnnual = taxes.reduce((a,b)=>a+b,0);
+    const interestAnnual = interest.reduce((a,b)=>a+b,0);
+    const netProfit = gpT - opexAnnual - interestAnnual - taxesAnnual;
+    const netMargin = revT > 0 ? netProfit / revT : 0;
+
+    // Year-end WC
+    const arEndY = arEnd[11], invEndY = invEnd[11], apEndY = apEnd[11];
+    const nwcEndY = arEndY + invEndY - apEndY;
+
+    // Assets per month (use ETHALON cash)
+    const assetsM = Array(12).fill(0);
+    for(let i=0;i<12;i++){
+      assetsM[i] = cashEndM[i] + arEnd[i] + invEnd[i];
+    }
+    const assetsEndY = assetsM[11];
+    const assetsAvgY = assetsM.reduce((a,b)=>a+b,0)/12;
+
+    // Turnover metrics
+    const assetTurnover = assetsAvgY > 0 ? (revT / assetsAvgY) : 0;
+    const assetTurnoverDays = assetTurnover > 0 ? (365 / assetTurnover) : 0;
+
+    // Frozen share
+    const frozenShare = assetsEndY !== 0 ? (nwcEndY / assetsEndY) : 0;
+
+    const ccc = dio + dso - dpo;
+    const opCycle = dio + dso;
+
+    // Render
+    setText("revS", revS); setText("revC", revC); setText("revB", revB); setText("revT", revT);
+
+    setText("gpS", gpS); setText("gpmS", gpmS, "pct");
+    setText("gpC", gpC); setText("gpmC", gpmC, "pct");
+    setText("gpB", gpB); setText("gpmB", gpmB, "pct");
+    setText("gpT", gpT);
+
+    setText("np", netProfit); setText("npm", netMargin, "pct");
+
+    setText("cfoY", cfoY);
+    setText("cffY", cffY);
+    setText("cashEnd", cashEndY);
+    setText("cashCheck", cashEndY); // контроль = тот же результат (по определению)
+
+    setText("arEnd", arEndY);
+    setText("invEnd", invEndY);
+    setText("apEnd", apEndY);
+    setText("nwcEnd", nwcEndY);
+
+    setText("assetsEnd", assetsEndY);
+    setText("assetsAvg", assetsAvgY);
+
+    setText("at", assetTurnover, "num");
+    setText("atDays", assetTurnoverDays, "days");
+    setText("frozen", frozenShare, "pct");
+    setText("ccc", ccc, "days");
+    setText("opCycle", opCycle, "days");
+  }
+
+  document.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", recalc);
+    inp.addEventListener("change", recalc);
+  });
+
+  recalc();
+</script>
+</body>
+</html>
